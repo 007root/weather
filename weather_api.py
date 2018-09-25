@@ -52,8 +52,8 @@ def get_location(province, city=None, zone=None):
                         ret = i
                 else:
                     continue
-            if ret:
-                return ret
+            assert ret, "Not found %s. Please enter again" % province
+            return ret
 
 
 def get_wind_speed(speed):
