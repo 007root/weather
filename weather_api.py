@@ -68,7 +68,7 @@ def get_wind_speed(speed):
                 return v
 
 
-def get_weather(province, city=None, zone=None):
+def get_realtime_weather(province, city=None, zone=None):
     """
     get_weather(province, city=None, zone=None)
     """
@@ -100,6 +100,50 @@ def get_weather(province, city=None, zone=None):
 
     return result
 
+
+def get_forecast_weather(province, city=None, zone=None):
+    """
+    get_weather(province, city=None, zone=None)
+    """
+    LOCATION = get_location(province, city, zone)
+    coordinate = ','.join(LOCATION[-2:])
+    API = 'https://api.caiyunapp.com/v2/G4GV25ceb9iD9g0P/%s/forecast.json?unit=metric:v2' % coordinate
+    weather = requests.get(API)
+    weather = weather.json()
+
+    server_time = float(weather.get('server_time'))
+    server_time = datetime.fromtimestamp(server_time)
+    daily = weather.get('result').get('daily')
+    speed = daily.get('wind')[0].get('avg').get('speed')
+    skycon = SKYCON.get(daily.get('skycon')[0].get('value'))
+    temperature =  daily.get('temperature')[0]
+    temp_avg = temperature.get('avg')
+    temp_min = temperature.get('min')
+    temp_max = temperature.get('max')
+    ultraviolet = daily.get('ultraviolet')[0].get('desc')
+    pm25 = daily.get('pm25')[0].get('max')
+    sun = daily.get('astro')[0]
+    sun_set = sun.get('sunset').get('time')
+    sun_rise = sun.get('sunrise').get('time')
+    region = LOCATION[:2]
+    speed_msg = get_wind_speed(speed)
+
+    result = """北京时间: %s
+%s
+明天天气概况
+  日出: %s
+  日落: %s
+  天气: %s
+  pm2.5 : %s
+ 紫外线 : %s
+  气温: 最高 %s℃ 最低 %s℃ 平均 %s℃
+  风速: %skm/h, %s级, %s""" % (server_time, ','.join(region), sun_rise, sun_set, skycon, pm25,
+                               ultraviolet, temp_max, temp_min, temp_avg,
+                               speed, speed_msg[0],
+                               ','.join(speed_msg[-2:]))
+
+    return result
+
 if __name__ == '__main__':
-    the_weather = get_weather('北京', '朝阳')
+    the_weather = get_realtime_weather('北京', '朝阳')
     print(the_weather)
